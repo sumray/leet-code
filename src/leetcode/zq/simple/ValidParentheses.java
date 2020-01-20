@@ -24,11 +24,8 @@ public class ValidParentheses {
 				return false;
 			}
 			stack.pop();
-			if (stack.empty()){
-				return true;
-			}
 		}
-		return false;
+		return stack.empty();
 	}
 
 	public static void main(String[] args) {
@@ -38,10 +35,12 @@ public class ValidParentheses {
 		String s3 = "(())";
 		String s4 = "([)]";
 		String s5 = "(";
+		String s6 = "[])";
 		System.out.println(v.isValid(s));
 		System.out.println(v.isValid(s2));
 		System.out.println(v.isValid(s3));
 		System.out.println(v.isValid(s4));
 		System.out.println(v.isValid(s5));
+		System.out.println(v.isValid(s6));
 	}
 }
