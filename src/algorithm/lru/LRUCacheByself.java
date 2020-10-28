@@ -5,111 +5,84 @@ import java.util.HashMap;
 /**
  * 手动实现双向链表，时间复杂度O(1)的LRU算法缓存
  */
-public class LRUCacheByself<K,V> {
+public class LRUCacheByself {
 	
 	private int size;
 	
-	private DoubleLinkedList<K,V> linkedList;
+	private Node head;
 	
-	private HashMap<K, Node<K,V>> indexes;
+	private Node tail;
+	
+	private HashMap<Integer, Node> indexes;
 
 	public LRUCacheByself(int size) {
 		this.size = size;
-		linkedList = new DoubleLinkedList<>();
+		head = new Node(0, 0);
+		tail = new Node(0, 0);
 		indexes = new HashMap<>();
+		head.next = tail;
+		tail.pre = head;
 	}
 
-	public V get(K key) {
-		if (!indexes.containsKey(key)) {
+	public Integer get(int key) {
+		Node node = indexes.get(key);
+		if (node == null) {
 			return null;
 		}
-		Node<K,V> cur = indexes.get(key);
-		linkedList.moveNodeToTail(cur);
-		return cur.value;
+		moveToFirst(node);
+		return node.value;
 	}
 
-	public void put(K key, V value) {
-		Node<K, V> ori = indexes.get(key);
-		if (ori != null) {
-			ori.value = value;
-			linkedList.moveNodeToTail(ori);
-			indexes.put(key, ori);
+	public void put(int key, int value) {
+		Node node = indexes.get(key);
+		if (node != null) {
+			node.value = value;
+			moveToFirst(node);
+			indexes.put(key, node);
 			return;
 		}
-		ori = new Node<>(key, value);
-		if (indexes.size() >= size) {
-			K firKey = linkedList.removeFirst();
-			indexes.remove(firKey);
-			linkedList.addToTail(ori);
-			indexes.put(key, ori);
-		} else {
-			indexes.put(key, ori);
-			linkedList.addToTail(ori);
+		node = new Node(key, value);
+		if (size == indexes.size()) {
+			int removeKey = removeTail();
+			indexes.remove(removeKey);
 		}
+		addFirst(node);
+		indexes.put(key, node);
+	}
+
+	private void moveToFirst(Node node) {
+		removeNode(node);
+		addFirst(node);
 	}
 	
-	private static class Node<K,V> {
-		Node<K,V> pre;
-		Node<K,V> next;
-		K key;
-		V value;
-		
-		Node(K key, V value) {
+	private void addFirst(Node node) {
+		node.next = head.next;
+		node.pre = head;
+		head.next.pre = node;
+		head.next = node;
+	}
+
+	private int removeTail() {
+		Node node = tail.pre;
+		removeNode(node);
+		return node.key;
+	}
+
+	private void removeNode(Node node) {
+		node.pre.next = node.next;
+		node.next.pre = node.pre;
+	}
+	
+	static class Node {
+		int key;
+		int value;
+		Node pre;
+		Node next;
+
+		public Node(int key, int value) {
 			this.key = key;
 			this.value = value;
-			this.pre = null;
-			this.next = null;
 		}
 	}
 	
-	private static class DoubleLinkedList<K,V> {
-		Node<K,V> head;
-		Node<K,V> tail;
-		
-		void moveNodeToTail(Node<K,V> cur) {
-			if (tail == cur) {
-				return;
-			}
-			if (head == cur) {
-				cur.next.pre = null;
-				cur.pre = tail;
-				head = cur.next;
-				cur.next = null;
-				tail = cur;
-				return;
-			}
-			cur.pre.next = cur.next;
-			cur.next.pre = cur.pre;
-			cur.pre = tail;
-			cur.next = null;
-			tail = cur;
-		}
-
-		void addToTail(Node<K,V> cur) {
-			if (tail == null) {
-				head = cur;
-				tail = cur;
-				return;
-			}
-			tail.next = cur;
-			cur.pre = tail;
-			tail = cur;
-		}
-
-		K removeFirst() {
-			if (head == null) {
-				return null;
-			}
-			if (head == tail) {
-				head = null;
-				tail = null;
-				return null;
-			}
-			K result = head.key;
-			head.next.pre = null;
-			head = head.next;
-			return result;
-		}
-
-	}
 }
